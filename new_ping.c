@@ -42,7 +42,8 @@ int main()
         execvp(args[0], args);
         status =1;
     }
-    wait(&status); // waiting for child to finish before exiting
+    //wait(&status); // waiting for child to finish before exiting
+    sleep(1);
     printf("child exit status is: %d\n", status);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -238,16 +239,6 @@ unsigned short calculate_checksum(unsigned short *paddress, int len)
 
     return answer;
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
