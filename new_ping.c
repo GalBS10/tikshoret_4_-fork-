@@ -41,10 +41,10 @@ int main()
         printf("in child \n");
         execvp(args[0], args);
         status =1;
+        printf("child exit status is: %d\n", status);
     }
     //wait(&status); // waiting for child to finish before exiting
     sleep(1);
-    printf("child exit status is: %d\n", status);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -82,11 +82,9 @@ int main()
         fprintf(stderr, "To create a raw socket, the process needs to be run by Admin/root user.\n\n");
         return -1;
     }
-    //int flags = guard(fcntl(RAW_SOCK, F_GETFL), "could not get file flags");/////////////////////lidor's idea.//////////
-    //guard(fcntl)
     int i=0;//int for the icmp_seq
     //-----------the start of the loop----------------------//
-    while(EOF){
+    while(1){
     struct icmp icmphdr; // ICMP-header
     char data[SIZE] = "sended ping";
     char data2[SIZE] = "sended pong";
@@ -148,14 +146,14 @@ int main()
         }
         else
         {
-            printf("Successfuly sent one ping : ICMP HEADER : %d bytes, data length : %d , icmp header : %d \n", bytes_sent, datalen, ICMP_HDRLEN);
+        //printf("Successfuly sent one ping : ICMP HEADER : %d bytes, data length : %d , icmp header : %d \n", bytes_sent, datalen, ICMP_HDRLEN);
         }
         if(((send(newping_sock,data,SIZE,0))==-1)){//if send returned -1 there is an error.
             perror("error in sending data.\n");
             exit(1);
         }
         bzero(data,SIZE);//like memset, it deletes the first SIZE/2 bits
-        printf("we sended a ping to watchdog");
+        printf("we sended a ping to watchdog ");
 
         // Get the ping response
         bzero(packet, IP_MAXPACKET);
@@ -169,17 +167,31 @@ int main()
                 struct iphdr *iphdr = (struct iphdr *)packet;
                 struct icmphdr *icmphdr = (struct icmphdr *)(packet + (iphdr->ihl * 4));
                 // icmphdr->type
-                printf("Successfuly received one packet with %ld bytes : data length : %d , icmp header : %d , ip header : %d \n", bytes_received, datalen, ICMP_HDRLEN, IP4_HDRLEN);
-                printf("%ld bytes from %s: ", bytes_received, inet_ntoa(dest_in.sin_addr));
+                //printf("Successfuly received one packet with %ld bytes : data length : %d , icmp header : %d , ip header : %d \n", bytes_received, datalen, ICMP_HDRLEN, IP4_HDRLEN);
+                printf(" %ld bytes from %s: ", bytes_received, inet_ntoa(dest_in.sin_addr));
                 printf("icmp_seq = %d ",icmphdr->un.echo.sequence+i);
-                printf("ttl = %d ",iphdr->ttl);
-                
-                if(((send(newping_sock,data2,SIZE,0))==-1)){//if send returned -1 there is an error.
-                    perror("error in sending data.\n");
+                printf("ttl = %d \n",iphdr->ttl);
+                if(i==5){
+                //sleep(15);//trying to get the timeout.
+                }
+        if(recv(newping_sock,&timeout, sizeof(timeout),MSG_DONTWAIT)>0){//getting the timeout from the watchdog.
+   
+            if(!strcmp("timeout",timeout))//if the watchdog sent the timeout.
+            {
+                printf("\n-The watchdog sent : %s .\n", timeout);
+                printf("closing newping_sock and RAW_SOCK..."); 
+                close(newping_sock);
+                close(RAW_SOCK);
+                return 0;
+            
+            }
+        }
+
+                if(((send(newping_sock,data2,SIZE,0))==-1)){//sending the pong.
+                    perror("error in sending data.\n");//if send returned -1 there is an error.
                     exit(1);
                 }
-                bzero(data,SIZE);//like memset, it deletes the first SIZE/2 bits
-                printf("we sended a pong to watchdog");
+                bzero(data,SIZE);//like memset, it deletes the first SIZE bits
 
                 break;
             }
@@ -189,25 +201,17 @@ int main()
         float milliseconds = (end.tv_sec - start.tv_sec) * 1000.0f + (end.tv_usec - start.tv_usec) / 1000.0f;
         unsigned long microseconds = (end.tv_sec - start.tv_sec) * 1000.0f + (end.tv_usec - start.tv_usec);
         printf("RTT: %f milliseconds (%ld microseconds)\n", milliseconds, microseconds);//printing the time
-
-        if(recv(newping_sock,&timeout, sizeof(timeout),MSG_DONTWAIT)>0){//getting the timeout from the watchdog.
-
-        }
-        printf("The watchdog sent : %s .\n", timeout);
-        if(!strcmp("timeout",timeout))//if the watchdog sent the timeout.
-        {
-            printf("closing newping_sock and RAW_SOCK..."); 
-            close(newping_sock);
-            close(RAW_SOCK);
-            
-        }
+        printf("we sended a pong to watchdog\n");
+        
+        
         sleep(1);
         i++;
     }
     //---------------the end of the loop-------------------//
     // Close the raw socket descriptor.
-    close(RAW_SOCK);
-    printf("closing...");
+   // sleep(15);
+    //close(RAW_SOCK);
+   // printf("closing...");
 
 
 
