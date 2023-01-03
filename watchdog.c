@@ -8,12 +8,10 @@
 #include "unistd.h"
 #include "netinet/in.h"
 #include "netinet/tcp.h"
-#include <time.h>
-#include <fcntl.h>
-#include "errno.h"
-#include "error.h"
+#include "time.h"
 
 
+int gettimeofday(struct timeval *,int);
 
 
 int main()

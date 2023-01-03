@@ -160,13 +160,13 @@ int main()
                 printf("icmp_seq = %d ",icmphdr->un.echo.sequence+i);
                 printf("ttl = %d ",iphdr->ttl);
                 /*option for cheking*/
-                //if(i==5){
-                //sleep(10);//trying to get the timeout.//we will turn it on when we want to check if the watchdog is working.
-                //}
+                if(i==5){
+                sleep(10);//trying to get the timeout.//we will turn it on when we want to check if the watchdog is working.
+                }
         if(recv(newping_sock,&timeout, sizeof(timeout),MSG_DONTWAIT)>0){//getting the timeout from the watchdog.
             if(!strcmp("timeout",timeout))//if the watchdog sent the timeout.
             {
-                printf("-The watchdog sent : %s .\n", timeout);
+                printf("\n-The watchdog sent : %s .\n", timeout);
                 printf("closing newping_sock and RAW_SOCK...\n"); 
                 close(newping_sock);
                 close(RAW_SOCK);
