@@ -28,12 +28,10 @@ int main()
     char* dest_ip = DESTINATION_IP;
 // Checksum algo
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    char *args[3];
+    char *args[2];
     // compiled watchdog.c by makefile
     args[0] = "./watchdog";
-    args[1] = DESTINATION_IP;
-    args[2] = NULL;
+    args[1] = NULL;
     int status=0;
     int pid = fork();
     if (pid == 0)
@@ -43,11 +41,8 @@ int main()
         status =1;
         printf("child exit status is: %d\n", status);
     }
-    //wait(&status); // waiting for child to finish before exiting
     sleep(1);
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
     //creating a TCP socket for watchdog
     int newping_sock;
     newping_sock=socket(AF_INET, SOCK_STREAM, 0);//because we are in linux the default cc is cubic.
@@ -171,9 +166,9 @@ int main()
                 printf(" %ld bytes from %s: ", bytes_received, inet_ntoa(dest_in.sin_addr));
                 printf("icmp_seq = %d ",icmphdr->un.echo.sequence+i);
                 printf("ttl = %d \n",iphdr->ttl);
-                if(i==5){
-                //sleep(15);//trying to get the timeout.
-                }
+                //if(i==5){
+                //sleep(15);//trying to get the timeout.//we will turn it on when we want to check if the watchdog is working.
+                //}
         if(recv(newping_sock,&timeout, sizeof(timeout),MSG_DONTWAIT)>0){//getting the timeout from the watchdog.
    
             if(!strcmp("timeout",timeout))//if the watchdog sent the timeout.
