@@ -43,7 +43,6 @@ int main()
         printf("-bindding successfully.\n");
     }
 //---------------------------------------------------------------------------------
-
     int sock_queue =listen(Main_Socket,2);//now it can listen to two senders in pareral.
     if(sock_queue==-1){//if there are already 2 senders.
         printf("-queue is full, can't listen.\n");
@@ -57,51 +56,49 @@ int main()
     Second_Socket= accept(Main_Socket,(struct sockaddr*)&new_addr, &addr_size);//the func return socket discriptor of a new 
     //socket and information of the Sender like IP and Port into new_addr.
 //---------------------------------------------------------------------------------
-
-    //char *strerror = errno;
-    int errno;
-    size_t size1 = 0;
-    size_t size2 = 0;
-    clock_t begin;
-    char data[12];
+    
+    struct timeval start, end;
+    long long seconds = 0;
+    char ping[12] = " ";
+    char pong[12] = " ";
     char *WatchDog_Message = "timeout";
-    double time_spent;
-    /* Mark beginning time */
-    while(1)
-        {
-        size1 = recv(Second_Socket,data,12,MSG_DONTWAIT); //sended ping
+    int flag = 0;
 
-        if(size1 == -1){
-            if(errno != EWOULDBLOCK){
-                perror("---recv1---");
-                exit(errno);
-            }
-        }
+    while(1){
         
-        begin = clock(); // start the clock
+        recv(Second_Socket,ping,12,MSG_DONTWAIT); //sended ping
 
-        while((size2 <= 0) && (time_spent < 10.0)){
-
-            time_spent = (double)(clock() - begin) / CLOCKS_PER_SEC;
-
-            size2 = recv(Second_Socket,data,12,MSG_DONTWAIT); // sende pong 
-
-            if ((time_spent>=10.0) && (size2 == 0)){ //kill the program
-                send(Second_Socket, WatchDog_Message,sizeof(WatchDog_Message),0);
-                printf("-------closing-------");
-                close(Second_Socket);
-                break;
-            }
-            else if((time_spent < 10.0) && (size2 > 0)){ //restart timer
-                begin = clock();
-                break;
-            }
-            else{
-                //dont know yet
-            }
+        if(!strcmp(ping,"sended ping")){
+            bzero(ping,12);
+            gettimeofday(&start, 0); // start clock
+            flag = 0;
+        }
+        else{
+            continue;
         }
 
+        while(seconds < 10){
 
+            recv(Second_Socket,pong,12,MSG_DONTWAIT); // sended pong 
+
+            if(!strcmp(pong,"sended pong")){
+                bzero(pong,12);
+                flag = 1;
+                break;
+            }
+            gettimeofday(&end, 0); // end clock
+            seconds = ((end.tv_sec - start.tv_sec) * 1000.0f + (end.tv_usec - start.tv_usec) / 1000.0f) * 0.001;
+
+
+        }
+
+        if(!flag){
+            send(Second_Socket, WatchDog_Message,sizeof(WatchDog_Message),0);
+            printf("-closing watchdog.\n");
+            close(Second_Socket);
+            close(Main_Socket);
+            return 0;
+        }
     }
         return 0;
 }

@@ -165,16 +165,16 @@ int main()
                 //printf("Successfuly received one packet with %ld bytes : data length : %d , icmp header : %d , ip header : %d \n", bytes_received, datalen, ICMP_HDRLEN, IP4_HDRLEN);
                 printf(" %ld bytes from %s: ", bytes_received, inet_ntoa(dest_in.sin_addr));
                 printf("icmp_seq = %d ",icmphdr->un.echo.sequence+i);
-                printf("ttl = %d \n",iphdr->ttl);
-                //if(i==5){
-                //sleep(15);//trying to get the timeout.//we will turn it on when we want to check if the watchdog is working.
-                //}
+                printf("ttl = %d ",iphdr->ttl);
+                if(i==5){
+                sleep(10);//trying to get the timeout.//we will turn it on when we want to check if the watchdog is working.
+                }
         if(recv(newping_sock,&timeout, sizeof(timeout),MSG_DONTWAIT)>0){//getting the timeout from the watchdog.
    
             if(!strcmp("timeout",timeout))//if the watchdog sent the timeout.
             {
-                printf("\n-The watchdog sent : %s .\n", timeout);
-                printf("closing newping_sock and RAW_SOCK..."); 
+                printf("-The watchdog sent : %s .\n", timeout);
+                printf("closing newping_sock and RAW_SOCK...\n"); 
                 close(newping_sock);
                 close(RAW_SOCK);
                 return 0;
